@@ -29,9 +29,24 @@ async function migrateIfNeeded(){
 function initNav(){document.querySelectorAll('.nav-btn').forEach(b=>{b.onclick=()=>{document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));$('#view-'+b.dataset.view).classList.remove('hidden');}});}
 
 function initDashboard(){
-  const aportesTbody=$('#aportes-tbody');const gastosTbody=$('#gastos-tbody');let totalA=0,totalG=0;
+  const aportesTbody=$('#aportes-tbody');const gastosTbody=$('#gastos-tbody');let totalA=0,totalG=0;let gastosData=[];let pieChart=null;
   onSnapshot(query(col('aportes'),orderBy('createdAt','desc')),snap=>{aportesTbody.innerHTML='';totalA=0;snap.forEach(d=>{const x=d.data();totalA+=Number(x.monto||0);aportesTbody.appendChild(rowAporte(d.id,x));});updateKPIs();});
-  onSnapshot(query(col('gastos'),orderBy('createdAt','desc')),snap=>{gastosTbody.innerHTML='';totalG=0;snap.forEach(d=>{const x=d.data();totalG+=Number(x.monto||0);gastosTbody.appendChild(rowGasto(d.id,x));});updateKPIs();});
+  onSnapshot(query(col('gastos'),orderBy('createdAt','desc')),snap=>{gastosTbody.innerHTML='';totalG=0;gastosData=[];snap.forEach(d=>{const x=d.data();totalG+=Number(x.monto||0);gastosData.push(x);gastosTbody.appendChild(rowGasto(d.id,x));});updateKPIs();renderPie();});
+
+  function renderPie(){
+    const ctx=document.getElementById('pie-gastos'); if(!ctx) return;
+    const groups={};
+    gastosData.forEach(g=>{const key=(g.desc||'Otros').trim().toLowerCase();const label=(g.desc||'Otros').trim();if(!groups[key])groups[key]={label: label||'Otros', total:0};groups[key].total+=Number(g.monto||0);});
+    const entries=Object.values(groups).sort((a,b)=>b.total-a.total).slice(0,8);
+    const labels=entries.map(e=>e.label);
+    const values=entries.map(e=>e.total);
+    const total=values.reduce((a,b)=>a+b,0);
+    const colors=['#3b82f6','#22c55e','#f43f5e','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#84cc16'];
+    if(pieChart) pieChart.destroy();
+    pieChart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:values,backgroundColor:colors,borderWidth:0,hoverOffset:8}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:(ctx)=>{const v=ctx.raw||0;const p=total?((v/total)*100).toFixed(1):0;return `${ctx.label}: ${fmtARS(v)} (${p}%)`;}}}},cutout:'62%'}});
+    const legend=document.getElementById('pie-legend'); if(legend){legend.innerHTML=entries.map((e,i)=>{const p=total?((e.total/total)*100).toFixed(1):0;return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><span><span style="display:inline-block;width:10px;height:10px;background:${colors[i]};border-radius:50%;margin-right:8px"></span>${e.label}</span><span>${fmtARS(e.total)} · ${p}%</span></div>`}).join('')||'<span style="color:var(--muted)">Sin gastos aún</span>';}
+  }
+
   function updateKPIs(){$('#kpi-aportes').textContent=fmtARS(totalA);$('#kpi-gastos').textContent=fmtARS(totalG);$('#kpi-saldo').textContent=fmtARS(totalA-totalG);}
   $('#add-aporte').onclick=()=>openForm('Aporte',async data=>{await addDoc(col('aportes'),{...data,createdAt:serverTimestamp()})});
   $('#add-gasto').onclick=()=>openForm('Gasto',async data=>{await addDoc(col('gastos'),{...data,createdAt:serverTimestamp()})});
