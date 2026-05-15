@@ -1,205 +1,59 @@
-// js/dashboard.js - Versión COMPARTIDA Henrique e Sofia
-import { db, auth } from './config.js';
-import { collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { db } from './config.js';
+import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-let uid = null;
-let aportes = [], gastos = [], eventos = [], tareas = [];
-let currentDate = new Date();
+const $ = s => document.querySelector(s);
+const fmtARS = n => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(n||0);
 
-// ESPACIO COMPARTIDO - todos los admins ven lo mismo
-const BASE_PATH = `workspace/henrique-sofia`;
+let workspaceId = 'henrique-sofia';
+const col = name => collection(db, 'workspace', workspaceId, name);
 
-const fmtARS = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
+document.addEventListener('app:ready', () => { initNav(); initDashboard(); });
 
-window.addEventListener('user-logged', (e) => {
-  uid = e.detail.uid;
-  initListeners();
-});
-
-function initListeners() {
-  onSnapshot(query(collection(db, `${BASE_PATH}/aportes`), orderBy('fecha','desc')), snap => {
-    aportes = snap.docs.map(d => ({id:d.id, ...d.data()}));
-    renderAportes();
-    updateResumen();
-  });
-  
-  onSnapshot(query(collection(db, `${BASE_PATH}/gastos`), orderBy('fecha','desc')), snap => {
-    gastos = snap.docs.map(d => ({id:d.id, ...d.data()}));
-    renderGastos();
-    updateResumen();
-  });
-  
-  onSnapshot(collection(db, `${BASE_PATH}/eventos`), snap => {
-    eventos = snap.docs.map(d => ({id:d.id, ...d.data()}));
-    renderCalendario();
-  });
-  
-  onSnapshot(query(collection(db, `${BASE_PATH}/tareas`), orderBy('creado','desc')), snap => {
-    tareas = snap.docs.map(d => ({id:d.id, ...d.data()}));
-    renderTareas();
+function initNav(){
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.onclick=()=>{
+      document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
+      $('#view-'+b.dataset.view).classList.remove('hidden');
+    }
   });
 }
 
-// Aportes
-function renderAportes() {
-  const tbody = document.querySelector('#tabla-aportes tbody');
-  tbody.innerHTML = '';
-  aportes.forEach(a => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input value="${a.institucion||''}" data-field="institucion"></td>
-      <td><input type="date" value="${a.fecha||''}" data-field="fecha"></td>
-      <td><input type="number" step="0.01" value="${a.monto||0}" data-field="monto"></td>
-      <td><button class="btn-icon" data-del>✕</button></td>
-    `;
-    tr.querySelectorAll('input').forEach(inp => {
-      inp.addEventListener('change', () => updateDoc(doc(db, `${BASE_PATH}/aportes/${a.id}`), {
-        [inp.dataset.field]: inp.type==='number'? parseFloat(inp.value)||0 : inp.value
-      }));
-    });
-    tr.querySelector('[data-del]').onclick = () => deleteDoc(doc(db, `${BASE_PATH}/aportes/${a.id}`));
-    tbody.appendChild(tr);
+function initDashboard(){
+  const aportesTbody = $('#aportes-tbody');
+  const gastosTbody = $('#gastos-tbody');
+  let totalA=0,totalG=0;
+
+  onSnapshot(query(col('aportes'),orderBy('createdAt','desc')),snap=>{
+    aportesTbody.innerHTML=''; totalA=0;
+    snap.forEach(d=>{const x=d.data(); totalA+=Number(x.monto||0); aportesTbody.appendChild(rowAporte(d.id,x));});
+    updateKPIs();
   });
+  onSnapshot(query(col('gastos'),orderBy('createdAt','desc')),snap=>{
+    gastosTbody.innerHTML=''; totalG=0;
+    snap.forEach(d=>{const x=d.data(); totalG+=Number(x.monto||0); gastosTbody.appendChild(rowGasto(d.id,x));});
+    updateKPIs();
+  });
+  function updateKPIs(){ $('#kpi-aportes').textContent=fmtARS(totalA); $('#kpi-gastos').textContent=fmtARS(totalG); $('#kpi-saldo').textContent=fmtARS(totalA-totalG); }
+
+  $('#add-aporte').onclick=()=>openForm('Aporte',async data=>{await addDoc(col('aportes'),{...data,createdAt:serverTimestamp()})});
+  $('#add-gasto').onclick=()=>openForm('Gasto',async data=>{await addDoc(col('gastos'),{...data,createdAt:serverTimestamp()})});
+
+  function rowAporte(id,x){const tr=document.createElement('tr');tr.innerHTML=`<td><input type="date" value="${x.fecha||''}"></td><td><input value="${x.desc||''}" placeholder="Descripción"></td><td><input type="number" value="${x.monto||0}"></td><td><button class="btn-icon">🗑️</button></td>`;const [d,desc,m]=tr.querySelectorAll('input');const save=()=>updateDoc(doc(col('aportes'),id),{fecha:d.value,desc:desc.value,monto:Number(m.value||0)});[d,desc,m].forEach(i=>i.onchange=save);tr.querySelector('button').onclick=()=>deleteDoc(doc(col('aportes'),id));return tr;}
+  function rowGasto(id,x){const tr=document.createElement('tr');tr.innerHTML=`<td><input type="date" value="${x.fecha||''}"></td><td><input value="${x.desc||''}" placeholder="Descripción"></td><td><input type="number" value="${x.monto||0}"></td><td><button class="btn-icon">🗑️</button></td>`;const [d,desc,m]=tr.querySelectorAll('input');const save=()=>updateDoc(doc(col('gastos'),id),{fecha:d.value,desc:desc.value,monto:Number(m.value||0)});[d,desc,m].forEach(i=>i.onchange=save);tr.querySelector('button').onclick=()=>deleteDoc(doc(col('gastos'),id));return tr;}
+
+  // calendario
+  let current=new Date(); const grid=$('#cal-grid'); const title=$('#cal-title');
+  function renderCal(){grid.innerHTML='';const y=current.getFullYear(),m=current.getMonth();title.textContent=new Date(y,m).toLocaleDateString('es-AR',{month:'long',year:'numeric'});['D','L','M','M','J','V','S'].forEach(d=>{const el=document.createElement('div');el.className='cal-day-name';el.textContent=d;grid.appendChild(el)});const first=new Date(y,m,1);const start=(first.getDay()+6)%7;const days=new Date(y,m+1,0).getDate();for(let i=0;i<start;i++) grid.appendChild(blank());for(let d=1;d<=days;d++){const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const cell=document.createElement('div');cell.className='cal-day';cell.innerHTML=`<div class="cal-day-num">${d}</div><div class="cal-events" id="ev-${dateStr}"></div>`;cell.onclick=()=>openEvent(dateStr);grid.appendChild(cell)} onSnapshot(col('eventos'),snap=>{document.querySelectorAll('.cal-events').forEach(e=>e.innerHTML='');document.querySelectorAll('.cal-day').forEach(c=>c.classList.remove('has-event'));snap.forEach(doc=>{const e=doc.data();const el=document.getElementById('ev-'+e.fecha);if(el){el.textContent=(el.textContent?el.textContent+' • ':'')+e.titulo;el.parentElement.classList.add('has-event')}})})}
+  function blank(){const b=document.createElement('div');b.className='cal-day other';return b}
+  $('#prev-month').onclick=()=>{current.setMonth(current.getMonth()-1);renderCal()};$('#next-month').onclick=()=>{current.setMonth(current.getMonth()+1);renderCal()};renderCal();
+  function openEvent(fecha){openForm('Evento '+fecha,async data=>{await addDoc(col('eventos'),{fecha,titulo:data.desc,createdAt:serverTimestamp()})},true)}
+
+  // tareas
+  const list=$('#tareas-list'); onSnapshot(query(col('tareas'),orderBy('createdAt','desc')),snap=>{list.innerHTML='';snap.forEach(d=>{const t=d.data();const li=document.createElement('li');li.className='tarea'+(t.done?' completada':'');li.innerHTML=`<input type="checkbox" ${t.done?'checked':''}><span>${t.text}</span><button>×</button>`;li.querySelector('input').onchange=()=>updateDoc(doc(col('tareas'),d.id),{done:li.querySelector('input').checked});li.querySelector('button').onclick=()=>deleteDoc(doc(col('tareas'),d.id));list.appendChild(li)})}); $('#add-tarea').onclick=()=>openForm('Nueva tarea',async data=>{if(data.desc) await addDoc(col('tareas'),{text:data.desc,done:false,createdAt:serverTimestamp()})},true);
+
+  function openForm(title,onSave,simple=false){$('#modal-body').innerHTML=`<h3>${title}</h3>${simple?'<div class="form-row"><label>Descripción</label><input id="f-desc"></div>':'<div class="form-row"><label>Fecha</label><input id="f-fecha" type="date"></div><div class="form-row"><label>Descripción</label><input id="f-desc"></div><div class="form-row"><label>Monto</label><input id="f-monto" type="number"></div>'}<div class="modal-actions"><button id="m-cancel" class="btn-secondary">Cancelar</button><button id="m-save" class="btn-primary">Guardar</button></div>`;$('#modal').classList.remove('hidden');$('#m-cancel').onclick=close;$('#m-save').onclick=async()=>{const data={fecha:$('#f-fecha')?.value||'',desc:$('#f-desc')?.value||'',monto:Number($('#f-monto')?.value||0)};await onSave(data);close()}}
+  function close(){$('#modal').classList.add('hidden')}
+  $('#modal-close').onclick=close;
 }
-
-document.getElementById('add-aporte').onclick = async () => {
-  await addDoc(collection(db, `${BASE_PATH}/aportes`), {
-    institucion: 'Nueva institución',
-    fecha: new Date().toISOString().slice(0,10),
-    monto: 0,
-    creado: serverTimestamp()
-  });
-};
-
-// Gastos
-function renderGastos() {
-  const tbody = document.querySelector('#tabla-gastos tbody');
-  tbody.innerHTML = '';
-  gastos.forEach(g => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input value="${g.concepto||''}" data-field="concepto"></td>
-      <td><input type="date" value="${g.fecha||''}" data-field="fecha"></td>
-      <td><input type="number" step="0.01" value="${g.monto||0}" data-field="monto"></td>
-      <td><button class="btn-icon" data-del>✕</button></td>
-    `;
-    tr.querySelectorAll('input').forEach(inp => {
-      inp.addEventListener('change', () => updateDoc(doc(db, `${BASE_PATH}/gastos/${g.id}`), {
-        [inp.dataset.field]: inp.type==='number'? parseFloat(inp.value)||0 : inp.value
-      }));
-    });
-    tr.querySelector('[data-del]').onclick = () => deleteDoc(doc(db, `${BASE_PATH}/gastos/${g.id}`));
-    tbody.appendChild(tr);
-  });
-}
-
-document.getElementById('add-gasto').onclick = async () => {
-  await addDoc(collection(db, `${BASE_PATH}/gastos`), {
-    concepto: 'Nuevo gasto',
-    fecha: new Date().toISOString().slice(0,10),
-    monto: 0,
-    creado: serverTimestamp()
-  });
-};
-
-function updateResumen() {
-  const totalA = aportes.reduce((s,a)=>s+(parseFloat(a.monto)||0),0);
-  const totalG = gastos.reduce((s,g)=>s+(parseFloat(g.monto)||0),0);
-  document.getElementById('total-aportes').textContent = fmtARS.format(totalA);
-  document.getElementById('total-gastos').textContent = fmtARS.format(totalG);
-  document.getElementById('saldo').textContent = fmtARS.format(totalA - totalG);
-}
-
-// Calendario
-function renderCalendario() {
-  const cal = document.getElementById('calendario');
-  const label = document.getElementById('month-label');
-  cal.innerHTML = '';
-  
-  const y = currentDate.getFullYear(), m = currentDate.getMonth();
-  label.textContent = new Intl.DateTimeFormat('es-AR',{month:'long',year:'numeric'}).format(currentDate);
-  
-  ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'].forEach(d=>{
-    const n = document.createElement('div'); n.className='cal-day-name'; n.textContent=d; cal.appendChild(n);
-  });
-  
-  const first = new Date(y,m,1), start = new Date(first); start.setDate(first.getDate()-first.getDay());
-  for(let i=0;i<42;i++){
-    const d = new Date(start); d.setDate(start.getDate()+i);
-    const iso = d.toISOString().slice(0,10);
-    const day = document.createElement('div');
-    day.className='cal-day';
-    if(d.getMonth()!==m) day.classList.add('other');
-    if(iso===new Date().toISOString().slice(0,10)) day.classList.add('today');
-    
-    const evs = eventos.filter(e=>e.fecha===iso);
-    if(evs.length) day.classList.add('has-event');
-    
-    day.innerHTML = `<div class="cal-day-num">${d.getDate()}</div><div class="cal-events">${evs.map(e=>e.titulo).join(', ')}</div>`;
-    day.onclick = () => openDayModal(iso, evs);
-    cal.appendChild(day);
-  }
-}
-
-document.getElementById('prev-month').onclick = ()=>{currentDate.setMonth(currentDate.getMonth()-1);renderCalendario()};
-document.getElementById('next-month').onclick = ()=>{currentDate.setMonth(currentDate.getMonth()+1);renderCalendario()};
-
-function openDayModal(fecha, evs) {
-  const modal = document.getElementById('modal');
-  const body = document.getElementById('modal-body');
-  body.innerHTML = `
-    <h4>Compromisos - ${new Date(fecha+'T00:00').toLocaleDateString('es-AR')}</h4>
-    <div id="ev-list"></div>
-    <div class="form-row"><label>Título</label><input id="ev-titulo" placeholder="Reunión, pago..."></div>
-    <div class="form-row"><label>Nota</label><textarea id="ev-nota" placeholder="Detalles"></textarea></div>
-    <div class="modal-actions"><button class="btn-secondary" id="ev-add">Agregar</button></div>
-  `;
-  const list = body.querySelector('#ev-list');
-  evs.forEach(ev=>{
-    const div = document.createElement('div'); div.className='tarea'; div.style.marginBottom='8px';
-    div.innerHTML = `<span><strong>${ev.titulo}</strong><br><small>${ev.nota||''}</small></span><button data-del>✕</button>`;
-    div.querySelector('[data-del]').onclick = async ()=>{ await deleteDoc(doc(db,`${BASE_PATH}/eventos/${ev.id}`)); modal.classList.add('hidden'); };
-    list.appendChild(div);
-  });
-  body.querySelector('#ev-add').onclick = async ()=>{
-    const t = body.querySelector('#ev-titulo').value.trim();
-    if(!t) return;
-    await addDoc(collection(db,`${BASE_PATH}/eventos`),{fecha,titulo:t,nota:body.querySelector('#ev-nota').value,creado:serverTimestamp()});
-    modal.classList.add('hidden');
-  };
-  modal.classList.remove('hidden');
-}
-
-// Tareas
-function renderTareas() {
-  const ul = document.getElementById('lista-tareas');
-  ul.innerHTML = '';
-  tareas.forEach(t=>{
-    const li = document.createElement('li'); li.className='tarea'+(t.completada?' completada':'');
-    li.innerHTML = `<input type="checkbox" ${t.completada?'checked':''}><span>${t.texto}</span><button data-del>✕</button>`;
-    li.querySelector('input').onchange = e => updateDoc(doc(db,`${BASE_PATH}/tareas/${t.id}`),{completada:e.target.checked});
-    li.querySelector('[data-del]').onclick = ()=>deleteDoc(doc(db,`${BASE_PATH}/tareas/${t.id}`));
-    ul.appendChild(li);
-  });
-}
-
-document.getElementById('add-tarea').onclick = () => {
-  const modal = document.getElementById('modal');
-  const body = document.getElementById('modal-body');
-  body.innerHTML = `
-    <h4>Nueva tarea</h4>
-    <div class="form-row"><input id="t-text" placeholder="Describí la tarea..."></div>
-    <div class="modal-actions"><button class="btn-primary" id="t-save">Guardar</button></div>
-  `;
-  body.querySelector('#t-save').onclick = async ()=>{
-    const txt = body.querySelector('#t-text').value.trim();
-    if(txt){ await addDoc(collection(db,`${BASE_PATH}/tareas`),{texto:txt,completada:false,creado:serverTimestamp()}); modal.classList.add('hidden'); }
-  };
-  modal.classList.remove('hidden');
-};
-
-document.getElementById('modal-close').onclick = ()=>document.getElementById('modal').classList.add('hidden');
-document.getElementById('modal').addEventListener('click', e=>{ if(e.target.id==='modal') e.target.classList.add('hidden') });
-
-// Inicial
-renderCalendario();

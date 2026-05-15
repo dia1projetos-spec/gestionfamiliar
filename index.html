@@ -1,160 +1,88 @@
 <!DOCTYPE html>
-<html lang="es-AR">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Henrique e Sofia - Control Financiero</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Henrique & Sofia - Finanzas</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Pantalla de carga -->
-    <div id="loader">
-        <div class="loader-content">
-            <div class="logo-pulse">
-                <span>H</span><span>&</span><span>S</span>
-            </div>
-            <h1>Henrique e Sofia</h1>
-            <p>Sistema de Control Financiero</p>
-            <div class="loader-bar"><div></div></div>
+  <div id="auth-view" class="auth-body">
+    <div class="auth-card">
+      <h1>Bienvenidos</h1>
+      <p class="subtitle">Ingresa para gestionar tus finanzas</p>
+      <div class="form-row">
+        <label>Email</label>
+        <input id="email" type="email" placeholder="tu@email.com"/>
+      </div>
+      <div class="form-row">
+        <label>Contraseña</label>
+        <input id="password" type="password" placeholder="••••••••"/>
+      </div>
+      <button id="login-btn" class="btn-primary">Entrar</button>
+      <p class="muted">¿Primera vez? <a href="#" id="show-register">Crear cuenta</a></p>
+      <p id="auth-error" class="error"></p>
+    </div>
+    <div id="register-card" class="auth-card hidden">
+      <h1>Crear cuenta</h1>
+      <div class="form-row"><label>Email</label><input id="reg-email" type="email"/></div>
+      <div class="form-row"><label>Contraseña (mín 6)</label><input id="reg-password" type="password"/></div>
+      <button id="register-btn" class="btn-primary">Registrarme</button>
+      <p class="muted"><a href="#" id="show-login">Volver</a></p>
+      <p id="reg-error" class="error"></p>
+    </div>
+  </div>
+
+  <div id="app-view" class="hidden">
+    <header class="app-header">
+      <div class="brand"><span class="dot"></span> Henrique & Sofia</div>
+      <div class="header-right">
+        <span id="user-email" class="user-email"></span>
+        <button id="logout-btn" class="btn-secondary">Salir</button>
+      </div>
+    </header>
+    <nav class="nav">
+      <button data-view="dashboard" class="nav-btn active">Dashboard</button>
+      <button data-view="aportes" class="nav-btn">Aportes</button>
+      <button data-view="gastos" class="nav-btn">Gastos</button>
+      <button data-view="calendario" class="nav-btn">Calendario</button>
+      <button data-view="tareas" class="nav-btn">Tareas</button>
+    </nav>
+
+    <main>
+      <section id="view-dashboard" class="view">
+        <div class="grid">
+          <div class="card"><h3>Total Aportes</h3><div id="kpi-aportes" class="kpi green">$0</div></div>
+          <div class="card"><h3>Total Gastos</h3><div id="kpi-gastos" class="kpi red">$0</div></div>
+          <div class="card"><h3>Saldo</h3><div id="kpi-saldo" class="kpi blue">$0</div></div>
         </div>
-    </div>
+      </section>
 
-    <!-- Login -->
-    <div id="login-screen" class="screen hidden">
-        <div class="login-card">
-            <div class="brand">
-                <h1>Henrique e Sofia</h1>
-                <p>Bienvenido de nuevo</p>
-            </div>
-            <form id="login-form">
-                <div class="input-group">
-                    <label>Email del administrador</label>
-                    <input type="email" id="email" required placeholder="admin@ejemplo.com">
-                </div>
-                <div class="input-group">
-                    <label>Contraseña</label>
-                    <input type="password" id="password" required placeholder="••••••••">
-                </div>
-                <button type="submit" class="btn-primary">Ingresar</button>
-                <p id="login-error" class="error"></p>
-            </form>
-        </div>
-    </div>
+      <section id="view-aportes" class="view hidden">
+        <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Aportes</h3><button id="add-aporte">+ Agregar</button></div>
+        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Descripción</th><th>Monto</th><th></th></tr></thead><tbody id="aportes-tbody"></tbody></table></div></div>
+      </section>
 
-    <!-- Dashboard -->
-    <div id="app-screen" class="screen hidden">
-        <header class="topbar">
-            <div class="brand-small">
-                <div class="logo-mini">H&S</div>
-                <div>
-                    <strong>Henrique e Sofia</strong>
-                    <span>Control Financiero</span>
-                </div>
-            </div>
-            <div class="user-menu">
-                <span id="user-email"></span>
-                <button id="logout-btn" class="btn-ghost">Salir</button>
-            </div>
-        </header>
+      <section id="view-gastos" class="view hidden">
+        <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Gastos</h3><button id="add-gasto">+ Agregar</button></div>
+        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Descripción</th><th>Monto</th><th></th></tr></thead><tbody id="gastos-tbody"></tbody></table></div></div>
+      </section>
 
-        <main class="dashboard">
-            <!-- Resumen -->
-            <section class="cards-resumen">
-                <div class="card stat">
-                    <span>Total Aportes</span>
-                    <h2 id="total-aportes">$0,00</h2>
-                </div>
-                <div class="card stat">
-                    <span>Total Gastos</span>
-                    <h2 id="total-gastos">$0,00</h2>
-                </div>
-                <div class="card stat highlight">
-                    <span>Saldo Disponible</span>
-                    <h2 id="saldo">$0,00</h2>
-                </div>
-            </section>
+      <section id="view-calendario" class="view hidden">
+        <div class="card"><div class="calendar-head"><button id="prev-month">‹</button><h3 id="cal-title"></h3><button id="next-month">›</button></div><div class="cal-grid" id="cal-grid"></div></div>
+      </section>
 
-            <div class="grid-main">
-                <!-- Aportes -->
-                <section class="card tabla-card">
-                    <div class="card-header">
-                        <h3>Aportes (Ingresos)</h3>
-                        <button class="btn-secondary" id="add-aporte">+ Agregar</button>
-                    </div>
-                    <div class="tabla-wrapper">
-                        <table id="tabla-aportes">
-                            <thead>
-                                <tr>
-                                    <th>Institución</th>
-                                    <th>Fecha</th>
-                                    <th>Monto (ARS)</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </section>
+      <section id="view-tareas" class="view hidden">
+        <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Tareas</h3><button id="add-tarea">+ Nueva</button></div><ul id="tareas-list" class="tareas"></ul></div>
+      </section>
+    </main>
+  </div>
 
-                <!-- Gastos -->
-                <section class="card tabla-card">
-                    <div class="card-header">
-                        <h3>Gastos</h3>
-                        <button class="btn-secondary" id="add-gasto">+ Agregar</button>
-                    </div>
-                    <div class="tabla-wrapper">
-                        <table id="tabla-gastos">
-                            <thead>
-                                <tr>
-                                    <th>Concepto</th>
-                                    <th>Fecha</th>
-                                    <th>Monto (ARS)</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </section>
+  <div id="modal" class="modal hidden"><div class="modal-content"><button class="modal-close" id="modal-close">×</button><div id="modal-body"></div></div></div>
 
-                <!-- Calendario -->
-                <section class="card calendario-card">
-                    <div class="card-header">
-                        <h3>Calendario</h3>
-                        <div class="cal-nav">
-                            <button id="prev-month">‹</button>
-                            <span id="month-label"></span>
-                            <button id="next-month">›</button>
-                        </div>
-                    </div>
-                    <div id="calendario" class="calendario"></div>
-                </section>
-
-                <!-- Tareas -->
-                <section class="card tareas-card">
-                    <div class="card-header">
-                        <h3>Tareas</h3>
-                        <button class="btn-secondary" id="add-tarea">+ Nueva</button>
-                    </div>
-                    <ul id="lista-tareas"></ul>
-                </section>
-            </div>
-        </main>
-    </div>
-
-    <!-- Modal -->
-    <div id="modal" class="modal hidden">
-        <div class="modal-content">
-            <button class="modal-close" id="modal-close">×</button>
-            <div id="modal-body"></div>
-        </div>
-    </div>
-
-    <script type="module" src="js/config.js"></script>
-    <script type="module" src="js/auth.js"></script>
-    <script type="module" src="js/dashboard.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/dashboard.js"></script>
 </body>
 </html>

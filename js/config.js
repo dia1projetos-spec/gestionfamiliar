@@ -1,26 +1,17 @@
-// js/config.js - Configuración Firebase y Cloudinary
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ⚠️ REEMPLAZA con tus credenciales de Firebase
 export const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROYECTO.firebaseapp.com",
-  projectId: "TU_PROYECTO",
-  storageBucket: "TU_PROYECTO.appspot.com",
-  messagingSenderId: "XXXXXXXX",
-  appId: "1:XXXXXXXX:web:XXXXXXXX"
+  apiKey: "AIzaSyD2hlgQqhChsPJHOaIdwHXUL4SlEMGN4Ss",
+  authDomain: "henrique-sofi.firebaseapp.com",
+  projectId: "henrique-sofi",
+  storageBucket: "henrique-sofi.firebasestorage.app",
+  messagingSenderId: "244619990531",
+  appId: "1:244619990531:web:300a96f7a3a0777f7de036"
 };
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-
-// Cloudinary (para subir imágenes si lo necesitas)
-export const cloudinaryConfig = {
-  cloudName: "TU_CLOUD_NAME",
-  uploadPreset: "TU_UPLOAD_PRESET"
-};
-
-window.HS_CONFIG = { firebaseConfig, cloudinaryConfig };
+export const cloudinaryConfig = { cloudName: "", uploadPreset: "" };
