@@ -1,10 +1,13 @@
-// js/dashboard.js
+// js/dashboard.js - Versión COMPARTIDA Henrique e Sofia
 import { db, auth } from './config.js';
 import { collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 let uid = null;
 let aportes = [], gastos = [], eventos = [], tareas = [];
 let currentDate = new Date();
+
+// ESPACIO COMPARTIDO - todos los admins ven lo mismo
+const BASE_PATH = `workspace/henrique-sofia`;
 
 const fmtARS = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
 
@@ -14,26 +17,24 @@ window.addEventListener('user-logged', (e) => {
 });
 
 function initListeners() {
-  const base = `users/${uid}`;
-  
-  onSnapshot(query(collection(db, `${base}/aportes`), orderBy('fecha','desc')), snap => {
+  onSnapshot(query(collection(db, `${BASE_PATH}/aportes`), orderBy('fecha','desc')), snap => {
     aportes = snap.docs.map(d => ({id:d.id, ...d.data()}));
     renderAportes();
     updateResumen();
   });
   
-  onSnapshot(query(collection(db, `${base}/gastos`), orderBy('fecha','desc')), snap => {
+  onSnapshot(query(collection(db, `${BASE_PATH}/gastos`), orderBy('fecha','desc')), snap => {
     gastos = snap.docs.map(d => ({id:d.id, ...d.data()}));
     renderGastos();
     updateResumen();
   });
   
-  onSnapshot(collection(db, `${base}/eventos`), snap => {
+  onSnapshot(collection(db, `${BASE_PATH}/eventos`), snap => {
     eventos = snap.docs.map(d => ({id:d.id, ...d.data()}));
     renderCalendario();
   });
   
-  onSnapshot(query(collection(db, `${base}/tareas`), orderBy('creado','desc')), snap => {
+  onSnapshot(query(collection(db, `${BASE_PATH}/tareas`), orderBy('creado','desc')), snap => {
     tareas = snap.docs.map(d => ({id:d.id, ...d.data()}));
     renderTareas();
   });
@@ -52,17 +53,17 @@ function renderAportes() {
       <td><button class="btn-icon" data-del>✕</button></td>
     `;
     tr.querySelectorAll('input').forEach(inp => {
-      inp.addEventListener('change', () => updateDoc(doc(db, `users/${uid}/aportes/${a.id}`), {
+      inp.addEventListener('change', () => updateDoc(doc(db, `${BASE_PATH}/aportes/${a.id}`), {
         [inp.dataset.field]: inp.type==='number'? parseFloat(inp.value)||0 : inp.value
       }));
     });
-    tr.querySelector('[data-del]').onclick = () => deleteDoc(doc(db, `users/${uid}/aportes/${a.id}`));
+    tr.querySelector('[data-del]').onclick = () => deleteDoc(doc(db, `${BASE_PATH}/aportes/${a.id}`));
     tbody.appendChild(tr);
   });
 }
 
 document.getElementById('add-aporte').onclick = async () => {
-  await addDoc(collection(db, `users/${uid}/aportes`), {
+  await addDoc(collection(db, `${BASE_PATH}/aportes`), {
     institucion: 'Nueva institución',
     fecha: new Date().toISOString().slice(0,10),
     monto: 0,
@@ -83,17 +84,17 @@ function renderGastos() {
       <td><button class="btn-icon" data-del>✕</button></td>
     `;
     tr.querySelectorAll('input').forEach(inp => {
-      inp.addEventListener('change', () => updateDoc(doc(db, `users/${uid}/gastos/${g.id}`), {
+      inp.addEventListener('change', () => updateDoc(doc(db, `${BASE_PATH}/gastos/${g.id}`), {
         [inp.dataset.field]: inp.type==='number'? parseFloat(inp.value)||0 : inp.value
       }));
     });
-    tr.querySelector('[data-del]').onclick = () => deleteDoc(doc(db, `users/${uid}/gastos/${g.id}`));
+    tr.querySelector('[data-del]').onclick = () => deleteDoc(doc(db, `${BASE_PATH}/gastos/${g.id}`));
     tbody.appendChild(tr);
   });
 }
 
 document.getElementById('add-gasto').onclick = async () => {
-  await addDoc(collection(db, `users/${uid}/gastos`), {
+  await addDoc(collection(db, `${BASE_PATH}/gastos`), {
     concepto: 'Nuevo gasto',
     fecha: new Date().toISOString().slice(0,10),
     monto: 0,
@@ -157,13 +158,13 @@ function openDayModal(fecha, evs) {
   evs.forEach(ev=>{
     const div = document.createElement('div'); div.className='tarea'; div.style.marginBottom='8px';
     div.innerHTML = `<span><strong>${ev.titulo}</strong><br><small>${ev.nota||''}</small></span><button data-del>✕</button>`;
-    div.querySelector('[data-del]').onclick = async ()=>{ await deleteDoc(doc(db,`users/${uid}/eventos/${ev.id}`)); modal.classList.add('hidden'); };
+    div.querySelector('[data-del]').onclick = async ()=>{ await deleteDoc(doc(db,`${BASE_PATH}/eventos/${ev.id}`)); modal.classList.add('hidden'); };
     list.appendChild(div);
   });
   body.querySelector('#ev-add').onclick = async ()=>{
     const t = body.querySelector('#ev-titulo').value.trim();
     if(!t) return;
-    await addDoc(collection(db,`users/${uid}/eventos`),{fecha,titulo:t,nota:body.querySelector('#ev-nota').value,creado:serverTimestamp()});
+    await addDoc(collection(db,`${BASE_PATH}/eventos`),{fecha,titulo:t,nota:body.querySelector('#ev-nota').value,creado:serverTimestamp()});
     modal.classList.add('hidden');
   };
   modal.classList.remove('hidden');
@@ -176,8 +177,8 @@ function renderTareas() {
   tareas.forEach(t=>{
     const li = document.createElement('li'); li.className='tarea'+(t.completada?' completada':'');
     li.innerHTML = `<input type="checkbox" ${t.completada?'checked':''}><span>${t.texto}</span><button data-del>✕</button>`;
-    li.querySelector('input').onchange = e => updateDoc(doc(db,`users/${uid}/tareas/${t.id}`),{completada:e.target.checked});
-    li.querySelector('[data-del]').onclick = ()=>deleteDoc(doc(db,`users/${uid}/tareas/${t.id}`));
+    li.querySelector('input').onchange = e => updateDoc(doc(db,`${BASE_PATH}/tareas/${t.id}`),{completada:e.target.checked});
+    li.querySelector('[data-del]').onclick = ()=>deleteDoc(doc(db,`${BASE_PATH}/tareas/${t.id}`));
     ul.appendChild(li);
   });
 }
@@ -192,7 +193,7 @@ document.getElementById('add-tarea').onclick = () => {
   `;
   body.querySelector('#t-save').onclick = async ()=>{
     const txt = body.querySelector('#t-text').value.trim();
-    if(txt){ await addDoc(collection(db,`users/${uid}/tareas`),{texto:txt,completada:false,creado:serverTimestamp()}); modal.classList.add('hidden'); }
+    if(txt){ await addDoc(collection(db,`${BASE_PATH}/tareas`),{texto:txt,completada:false,creado:serverTimestamp()}); modal.classList.add('hidden'); }
   };
   modal.classList.remove('hidden');
 };
