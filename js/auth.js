@@ -1,33 +1,10 @@
 import { auth } from './config.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-const $ = s => document.querySelector(s);
-const authView = $('#auth-view');
-const appView = $('#app-view');
-
-$('#show-register').onclick = e => { e.preventDefault(); $('#auth-view .auth-card').classList.add('hidden'); $('#register-card').classList.remove('hidden'); };
-$('#show-login').onclick = e => { e.preventDefault(); $('#register-card').classList.add('hidden'); $('#auth-view .auth-card').classList.remove('hidden'); };
-
-$('#login-btn').onclick = async () => {
-  $('#auth-error').textContent = '';
-  try { await signInWithEmailAndPassword(auth, $('#email').value, $('#password').value); }
-  catch(e){ $('#auth-error').textContent = e.message; }
-};
-$('#register-btn').onclick = async () => {
-  $('#reg-error').textContent = '';
-  try { await createUserWithEmailAndPassword(auth, $('#reg-email').value, $('#reg-password').value); }
-  catch(e){ $('#reg-error').textContent = e.message; }
-};
-$('#logout-btn').onclick = () => signOut(auth);
-
-onAuthStateChanged(auth, user => {
-  if(user){
-    authView.classList.add('hidden');
-    appView.classList.remove('hidden');
-    $('#user-email').textContent = user.email;
-    document.dispatchEvent(new CustomEvent('app:ready', {detail:{user}}));
-  } else {
-    appView.classList.add('hidden');
-    authView.classList.remove('hidden');
-  }
-});
+const $=s=>document.querySelector(s);
+const authView=$('#auth-view');const appView=$('#app-view');
+$('#show-register').onclick=e=>{e.preventDefault();$('#auth-view .auth-card').classList.add('hidden');$('#register-card').classList.remove('hidden');};
+$('#show-login').onclick=e=>{e.preventDefault();$('#register-card').classList.add('hidden');$('#auth-view .auth-card').classList.remove('hidden');};
+$('#login-btn').onclick=async()=>{$('#auth-error').textContent='';try{await signInWithEmailAndPassword(auth,$('#email').value,$('#password').value);}catch(e){$('#auth-error').textContent=e.message;}};
+$('#register-btn').onclick=async()=>{$('#reg-error').textContent='';try{await createUserWithEmailAndPassword(auth,$('#reg-email').value,$('#reg-password').value);}catch(e){$('#reg-error').textContent=e.message;}};
+$('#logout-btn').onclick=()=>signOut(auth);
+onAuthStateChanged(auth,user=>{if(user){authView.classList.add('hidden');appView.classList.remove('hidden');$('#user-email').textContent=user.email;document.dispatchEvent(new CustomEvent('app:ready',{detail:{user}}));}else{appView.classList.add('hidden');authView.classList.remove('hidden');}});

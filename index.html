@@ -13,14 +13,8 @@
     <div class="auth-card">
       <h1>Bienvenidos</h1>
       <p class="subtitle">Ingresa para gestionar tus finanzas</p>
-      <div class="form-row">
-        <label>Email</label>
-        <input id="email" type="email" placeholder="tu@email.com"/>
-      </div>
-      <div class="form-row">
-        <label>Contraseña</label>
-        <input id="password" type="password" placeholder="••••••••"/>
-      </div>
+      <div class="form-row"><label>Email</label><input id="email" type="email" placeholder="tu@email.com"/></div>
+      <div class="form-row"><label>Contraseña</label><input id="password" type="password" placeholder="••••••••"/></div>
       <button id="login-btn" class="btn-primary">Entrar</button>
       <p class="muted">¿Primera vez? <a href="#" id="show-register">Crear cuenta</a></p>
       <p id="auth-error" class="error"></p>
@@ -38,10 +32,7 @@
   <div id="app-view" class="hidden">
     <header class="app-header">
       <div class="brand"><span class="dot"></span> Henrique & Sofia</div>
-      <div class="header-right">
-        <span id="user-email" class="user-email"></span>
-        <button id="logout-btn" class="btn-secondary">Salir</button>
-      </div>
+      <div class="header-right"><span id="user-email" class="user-email"></span><button id="logout-btn" class="btn-secondary">Salir</button></div>
     </header>
     <nav class="nav">
       <button data-view="dashboard" class="nav-btn active">Dashboard</button>
@@ -50,38 +41,15 @@
       <button data-view="calendario" class="nav-btn">Calendario</button>
       <button data-view="tareas" class="nav-btn">Tareas</button>
     </nav>
-
     <main>
-      <section id="view-dashboard" class="view">
-        <div class="grid">
-          <div class="card"><h3>Total Aportes</h3><div id="kpi-aportes" class="kpi green">$0</div></div>
-          <div class="card"><h3>Total Gastos</h3><div id="kpi-gastos" class="kpi red">$0</div></div>
-          <div class="card"><h3>Saldo</h3><div id="kpi-saldo" class="kpi blue">$0</div></div>
-        </div>
-      </section>
-
-      <section id="view-aportes" class="view hidden">
-        <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Aportes</h3><button id="add-aporte">+ Agregar</button></div>
-        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Descripción</th><th>Monto</th><th></th></tr></thead><tbody id="aportes-tbody"></tbody></table></div></div>
-      </section>
-
-      <section id="view-gastos" class="view hidden">
-        <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Gastos</h3><button id="add-gasto">+ Agregar</button></div>
-        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Descripción</th><th>Monto</th><th></th></tr></thead><tbody id="gastos-tbody"></tbody></table></div></div>
-      </section>
-
-      <section id="view-calendario" class="view hidden">
-        <div class="card"><div class="calendar-head"><button id="prev-month">‹</button><h3 id="cal-title"></h3><button id="next-month">›</button></div><div class="cal-grid" id="cal-grid"></div></div>
-      </section>
-
-      <section id="view-tareas" class="view hidden">
-        <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Tareas</h3><button id="add-tarea">+ Nueva</button></div><ul id="tareas-list" class="tareas"></ul></div>
-      </section>
+      <section id="view-dashboard" class="view"><div class="grid"><div class="card"><h3>Total Aportes</h3><div id="kpi-aportes" class="kpi green">$0</div></div><div class="card"><h3>Total Gastos</h3><div id="kpi-gastos" class="kpi red">$0</div></div><div class="card"><h3>Saldo</h3><div id="kpi-saldo" class="kpi blue">$0</div></div></div></section>
+      <section id="view-aportes" class="view hidden"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Aportes</h3><button id="add-aporte">+ Agregar</button></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Descripción</th><th>Monto</th><th></th></tr></thead><tbody id="aportes-tbody"></tbody></table></div></div></section>
+      <section id="view-gastos" class="view hidden"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Gastos</h3><button id="add-gasto">+ Agregar</button></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Descripción</th><th>Monto</th><th></th></tr></thead><tbody id="gastos-tbody"></tbody></table></div></div></section>
+      <section id="view-calendario" class="view hidden"><div class="card"><div class="calendar-head"><button id="prev-month">‹</button><h3 id="cal-title"></h3><button id="next-month">›</button></div><div class="cal-grid" id="cal-grid"></div></div></section>
+      <section id="view-tareas" class="view hidden"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Tareas</h3><button id="add-tarea">+ Nueva</button></div><ul id="tareas-list" class="tareas"></ul></div></section>
     </main>
   </div>
-
   <div id="modal" class="modal hidden"><div class="modal-content"><button class="modal-close" id="modal-close">×</button><div id="modal-body"></div></div></div>
-
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/dashboard.js"></script>
 </body>
